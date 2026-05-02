@@ -34,6 +34,8 @@
           '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       }).addTo(map);
 
+      const remoteMarker = new Map();
+
       function getUserCurrentLocation() {
         return new Promise((resolve, reject) => {
           if ("geolocation" in navigator) {
@@ -71,6 +73,18 @@
           }
         }, 10 * 1000);
       }
+
+      socket.on("server:location:update", (data) => {
+        const { id, latitude, longitude } = data;
+        if (!remoteMarker.has(id)) {
+          const marker = L.marker([latitude, longitude]);
+          marker.addTo(map).bindPopup(id);
+          remoteMarker.set(id, marker);
+        } else {
+          const existingMarkerUpdate = remoteMarker.get(id);
+          existingMarkerUpdate.setLatLng([latitude, longitude]);
+        }
+      });
 
       window.addEventListener("load", main);
     </script>
